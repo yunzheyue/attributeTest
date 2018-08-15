@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LayoutAnimationController;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -22,14 +23,16 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    ValueAnimator valueAnimator;
     private RelativeLayout rl_container;
-    private TextView tv_test;
+    private TextView tv_test, tv_dollar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tv_test = (TextView) findViewById(R.id.tv_test);
+        tv_dollar = (TextView) findViewById(R.id.tv_dollar);
         rl_container = (RelativeLayout) findViewById(R.id.rl_container);
         tv_test.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,8 +40,25 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "休息休息", Toast.LENGTH_SHORT).show();
             }
         });
-        foo7();
+//        foo7();
 
+        foo9();
+
+    }
+
+    //计时器动画
+    private void foo9() {
+        valueAnimator = ValueAnimator.ofInt(1, 100);
+        valueAnimator.setDuration(5000);
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int animatedValue = (int) animation.getAnimatedValue();
+                tv_dollar.setText("$" + animatedValue);
+            }
+        });
+        valueAnimator.start();
     }
 
     //布局动画，能够改变在当前view中添加其他的view时候，添加view具有动画效果。
@@ -67,22 +87,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void foo4() {
+        //类似PropertyValueHolder 可以使用AnimatorSet,并且更精确的顺序控制
+        ObjectAnimator translationX = ObjectAnimator.ofFloat(tv_test, "translationX", 0, 700);
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(tv_test, "scaleX", 1f, 0f, 1f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(tv_test, "scaleY", 1f, 0f, 1f);
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(translationX, scaleX, scaleY);//这是同时播放动画
+//        animatorSet.playSequentially(translationX,scaleX,scaleY);//这是按照顺序播放动画
+//        animatorSet.play(scaleX).with(translationX).with(scaleY);//这个的效果其实和第一种相同
+        animatorSet.play(scaleX).with(translationX).before(scaleY);//这个控制顺序 play()  with()  before()  after()
+        animatorSet.setDuration(5000);
+        animatorSet.start();
+    }
+
     private void foo8() {
 
 
     }
-
-    class ObjectTypeEvaluator implements TypeEvaluator{
-        //fraction:表示动画完成度，也就是动画执行的进度  根据它来计算当前的动画的值
-        //startValue: 动画的开始值
-        @Override
-        public Object evaluate(float fraction, Object startValue, Object endValue) {
-
-            return null;
-        }
-    }
-
-
 
     //通过animate方法直接驱动动画，可以认为是属性动画的一个简写的方式，
     //这样他的属性会随着view的移动而移动。
@@ -114,20 +136,6 @@ public class MainActivity extends AppCompatActivity {
         Animator animator = AnimatorInflater.loadAnimator(this, R.animator.animatortest);
         animator.setTarget(tv_test);
         animator.start();
-    }
-
-    private void foo4() {
-        //类似PropertyValueHolder 可以使用AnimatorSet,并且更精确的顺序控制
-        ObjectAnimator translationX = ObjectAnimator.ofFloat(tv_test, "translationX", 0, 700);
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(tv_test, "scaleX", 1f, 0f, 1f);
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(tv_test, "scaleY", 1f, 0f, 1f);
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(translationX, scaleX, scaleY);//这是同时播放动画
-//        animatorSet.playSequentially(translationX,scaleX,scaleY);//这是按照顺序播放动画
-//        animatorSet.play(scaleX).with(translationX).with(scaleY);//这个的效果其实和第一种相同
-        animatorSet.play(scaleX).with(translationX).before(scaleY);//这个控制顺序 play()  with()  before()  after()
-        animatorSet.setDuration(5000);
-        animatorSet.start();
     }
 
     private void foo3() {
@@ -211,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
         scaleX.setDuration(2000);
         scaleX.start();
 
+
         //使用PropertyValuesHollder对一个view，操作多个属性
 //        PropertyValuesHolder pvh1 = PropertyValuesHolder.ofFloat("translationX", 100, 1000);
 //        PropertyValuesHolder pvh2 = PropertyValuesHolder.ofFloat("rotationY", 120, 234);
@@ -241,5 +250,25 @@ public class MainActivity extends AppCompatActivity {
         });
 
         valueAnimator.start();
+    }
+
+    public void startAnimation1(View view) {
+        //属性动画的暂停
+        valueAnimator.pause();
+    }
+
+    public void startAnimation2(View view) {
+//        属性动画的恢复
+        valueAnimator.resume();
+    }
+
+    class ObjectTypeEvaluator implements TypeEvaluator {
+        //fraction:表示动画完成度，也就是动画执行的进度  根据它来计算当前的动画的值
+        //startValue: 动画的开始值
+        @Override
+        public Object evaluate(float fraction, Object startValue, Object endValue) {
+
+            return null;
+        }
     }
 }
